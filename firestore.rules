@@ -1,0 +1,117 @@
+rules_version = '2';
+
+// ReelScore: who can read and write what. Publish in Firebase console > Firestore > Rules.
+// Online data is only a username, a privacy choice, friends and three totals per account.
+// Every doc lists its allowed fields, so nothing else can be stored, and score writes are
+// throttled so one account can't burn through the free daily write quota.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function data() { return request.resource.data; }
+    function userPath(uid) { return /databases/$(database)/documents/users/$(uid); }
+    function namePath(name) { return /databases/$(database)/documents/usernames/$(name); }
+    function requestPath(from, to) { return /databases/$(database)/documents/requests/$(from + '_' + to); }
+    function myName() { return get(userPath(me())).data.username; }
+    function validName(n) { return n is string && n.matches('^[a-z0-9_.]{3,20}$'); }
+    function validPrivacy(p) { return p in ['public', 'friends', 'private']; }
+    function count(n) { return n is int && n >= 0 && n < 100000000; }
+    function day(d) { return d is string && d.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
+    function validScores(d) {
+      return count(d.today) && count(d.week) && count(d.allTime)
+        && d.today <= d.week && d.week <= d.allTime
+        && day(d.todayDate) && day(d.weekStart) && d.gapToday is bool;
+    }
+    // Score writes must stamp the server time, and come at most once every 10 seconds.
+    function throttled(before) {
+      return data().updatedAt == request.time
+        && (!('updatedAt' in before) || request.time > before.updatedAt + duration.value(10, 's'));
+    }
+    function isFriendOf(owner) {
+      return exists(/databases/$(database)/documents/users/$(owner)/friends/$(me()));
+    }
+
+    // One doc per taken username, pointing at its owner. Claimed together with the profile.
+    match /usernames/{name} {
+      allow get: if signedIn();
+      allow create: if signedIn() && validName(name)
+        && data().keys().hasOnly(['uid'])
+        && data().uid == me()
+        && getAfter(userPath(me())).data.username == name;
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+
+    match /users/{uid} {
+      function validUser() {
+        return data().keys().hasOnly(['username', 'privacy', 'today', 'todayDate', 'week', 'weekStart', 'allTime', 'gapToday', 'updatedAt'])
+          && validPrivacy(data().privacy)
+          && validScores(data());
+      }
+      allow read: if signedIn() && (
+        uid == me()
+        || resource.data.privacy == 'public'
+        || (resource.data.privacy == 'friends' && isFriendOf(uid)));
+      allow create: if signedIn() && uid == me()
+        && validUser()
+        && validName(data().username)
+        && getAfter(namePath(data().username)).data.uid == me();
+      // The username never changes after it's claimed. Score writes are throttled; a change of
+      // privacy alone isn't, so it saves at once.
+      allow update: if signedIn() && uid == me()
+        && validUser()
+        && data().username == resource.data.username
+        && (throttled(resource.data)
+          || data().diff(resource.data).affectedKeys().hasOnly(['privacy']));
+      // Only together with the username, so names can't be hoarded by re-creating profiles.
+      allow delete: if signedIn() && uid == me()
+        && !existsAfter(namePath(resource.data.username));
+
+      // users/{uid}/friends/{friend}: written on both sides when a request is accepted.
+      match /friends/{friend} {
+        function validFriend(name) {
+          return data().keys().hasOnly(['name', 'since']) && data().name == name && data().since == request.time;
+        }
+        allow read: if signedIn() && (uid == me() || friend == me());
+        allow create: if signedIn() && (
+          // Your own list: someone who asked you, under the name on their request.
+          (uid == me() && exists(requestPath(friend, me()))
+            && validFriend(get(requestPath(friend, me())).data.fromName))
+          // Their list: only when they asked you, under your own username.
+          || (friend == me() && exists(requestPath(uid, me())) && validFriend(myName())));
+        allow delete: if signedIn() && (uid == me() || friend == me());
+      }
+    }
+
+    // Copies of public accounts' totals, for the Everyone leaderboard.
+    match /public/{uid} {
+      function validPublic() {
+        return uid == me()
+          && data().keys().hasOnly(['username', 'today', 'todayDate', 'week', 'weekStart', 'allTime', 'gapToday', 'updatedAt'])
+          && getAfter(userPath(me())).data.privacy == 'public'
+          && data().username == myName()
+          && validScores(data());
+      }
+      allow read: if signedIn();
+      allow create: if signedIn() && validPublic() && throttled({});
+      allow update: if signedIn() && validPublic() && throttled(resource.data);
+      allow delete: if signedIn() && uid == me();
+    }
+
+    // requests/{from}_{to}
+    match /requests/{id} {
+      allow read: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn()
+        && data().keys().hasOnly(['from', 'to', 'fromName', 'toName', 'createdAt'])
+        && data().from == me()
+        && data().to is string
+        && data().to != me()
+        && id == me() + '_' + data().to
+        && exists(userPath(data().to))
+        && data().fromName == myName()
+        && validName(data().toName)
+        && data().createdAt == request.time;
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+    }
+  }
+}

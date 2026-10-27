@@ -1,0 +1,21 @@
+.gradle/
+.kotlin/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+# Device screenshots can contain real usage data.
+design/screens/
+design/db/
+design/calibration/
+# Local agent skills and tooling, not part of the app.
+.agents/
+.claude/
+skills-lock.json
+# Firebase project config (holds the project's API key). Download your own from the
+# Firebase console into app/ to build.
+app/google-services.json
+# Source images from Canva; the app uses the cut-out copies in res/drawable-nodpi.
+design/pictures/raw/
+.DS_Store

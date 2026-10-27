@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window background matches the Compose background so app start doesn't flash. -->
+    <style name="Theme.ReelScore" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+    <color name="window_background">#EDEEEB</color>
+    <color name="launcher_background">#0D0D0F</color>
+</resources>

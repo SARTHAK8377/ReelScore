@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ReelScore</string>
+    <string name="service_label">ReelScore counter</string>
+    <string name="service_description">Counts the reels and short videos you watch in Instagram, YouTube, Facebook, Snapchat, Moj and Josh. It only looks at those apps, and only to notice when a new reel appears and which channel posted it. Everything is stored on this phone.</string>
+</resources>

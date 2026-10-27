@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown over the reels app by the counter service: the daily limit and journey arrival. Not blocking: OK or a tap outside closes it. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/popup_scrim"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#99000000"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:id="@+id/popup_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="28dp"
+        android:background="@drawable/popup_card"
+        android:clickable="true"
+        android:elevation="12dp"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/popup_big"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/bricolage_grotesque"
+            android:textColor="#C8F25A"
+            android:textSize="56sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/popup_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:accessibilityHeading="true"
+            android:fontFamily="@font/bricolage_grotesque"
+            android:textColor="#ECEDEF"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/popup_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="#A3A7AE"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/popup_ok"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/popup_button"
+            android:stateListAnimator="@null"
+            android:text="OK"
+            android:textAllCaps="false"
+            android:textColor="#13180A"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</FrameLayout>

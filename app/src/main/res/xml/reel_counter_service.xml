@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keep packageNames in sync with DetectorRules.apps. Android sends no events from any other app. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/service_description"
+    android:packageNames="com.instagram.android,com.google.android.youtube,com.facebook.katana,com.snapchat.android,in.mohalla.video,com.eterno.shortvideos"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewScrolled"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagReportViewIds|flagIncludeNotImportantViews"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="250"
+    android:isAccessibilityTool="false" />
